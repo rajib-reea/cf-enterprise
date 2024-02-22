@@ -1,13 +1,13 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
-Descrition: A test stack for demonstrating Cloudformation
+Description: A test stack for demonstrating Cloudformation
 Parameters:
   Subnet:
     Description: Subnet in which to place the resources
     Type: AWS::EC2::Subnet::Id
   SecurityGroup:
     Description: This group will be applied to both the ELB and instances in the ASG
-    Type: AWS::EC2::SecurityGroup::I
+    Type: AWS::EC2::SecurityGroup::Id
   InstanceType:
     Description: The instance type for the Launch Config
     Type: String
@@ -19,11 +19,11 @@ Parameters:
     - t2.medium
     - t2.large
 Resources:
-  My_instance:
+  MyInstance:
     Type: AWS::EC2::Instance
     Properties:
       UserData:
-        Fn::Base64: !Sub |
+        Fn::Base64:  |
           #!/bin/bash -xe
           yum install nginx -y
           sudo service nginx start
