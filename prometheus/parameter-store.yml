@@ -8,21 +8,20 @@ Resources:
         description: "Run a script on Linux instances."
         parameters:
           ServiceConfig:
-            type: String
+            type: AWS::SSM::Parameter
             description: The Prometheus service configuration
-            default: "{{ssm:grad-prom-ServiceConfig}}"
+            Value: "ssm:grad-prom-ServiceConfig"
         mainSteps:
           - action: aws:runShellScript
             name: runCommands
             inputs:
               timeoutSeconds: "60"
               runCommand:
-                # - sudo echo  "{{resolve:ssm:grad-prom-ServiceConfig}}"> /etc/systemd/system/prometheus.service
-                - sudo echo  "{{resolve:{{ServiceConfig}}}}"> /etc/systemd/system/prometheus.service
+                 - sudo echo  {{ServiceConfig}} > /etc/systemd/system/prometheus.service
       DocumentFormat: YAML
       DocumentType: Command
       Name:  !Sub "${AWS::StackName}"
 
 Outputs:
   EchoCommand:
-    Value: sudo echo  "{{resolve:{{ServiceConfig}}}}"> /etc/systemd/system/prometheus.service
+    Value: sudo echo  {{ServiceConfig}} > /etc/systemd/system/prometheus.service

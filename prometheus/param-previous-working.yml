@@ -6,18 +6,16 @@ Resources:
       Content:
         schemaVersion: "2.2"
         description: "Run a script on Linux instances."
-        parameters:
-          commands:
-            type: String
-            description: "(Required) The commands to run or the path to an existing script on the instance."
-            default: "echo Hello World"
         mainSteps:
           - action: aws:runShellScript
             name: runCommands
             inputs:
               timeoutSeconds: "60"
               runCommand:
-                - sudo echo '{{resolve:ssm:grad-prom-ServiceConfig}}' > /etc/systemd/system/prometheus.service
+                - sudo echo "{{resolve:ssm:ServiceConfig}}" > /etc/systemd/system/prometheus.service
       DocumentFormat: YAML
       DocumentType: Command
       Name: !Sub "${AWS::StackName}"
+Outputs:
+  EchoCommand:
+    Value:  sudo echo "{{resolve:ssm:ServiceConfig}}" > /etc/systemd/system/prometheus.service

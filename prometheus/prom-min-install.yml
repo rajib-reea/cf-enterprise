@@ -21,7 +21,8 @@ Resources:
   PrometheusScrapeConfig:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${AWS::StackName}-ScrapeConfig"
+      # Name: !Sub "${AWS::StackName}-ScrapeConfig"
+      Name: "ScrapeConfig"
       Type: String
       Value: !Sub |
         scrape_configs:
@@ -43,7 +44,8 @@ Resources:
   PrometheusServiceConfig:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${AWS::StackName}-ServiceConfig"
+      # Name: !Sub "${AWS::StackName}-ServiceConfig"
+      Name: "ServiceConfig"
       Type: String
       Value: |
         [Unit]
@@ -68,7 +70,8 @@ Resources:
   NodeExporterServiceConfig:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub "${AWS::StackName}-NodeExporter-ServiceConfig"
+      # Name: !Sub "${AWS::StackName}-NodeExporter-ServiceConfig"
+      Name:  "NodeExporterServiceConfig"
       Type: String
       Value: |
         [Unit]
@@ -120,54 +123,39 @@ Resources:
               timeoutSeconds: "60"
               runCommand:
                 - echo 'Downloading and extracting Prometheus'
-                - sudo systemctl stop prometheus >/dev/null 2>&1
                 - sudo wget {{ PackageUrl }} >/dev/null 2>&1
                 - sudo tar xfz prometheus-*.tar.gz
                 - if [ $? != 0 ]; then exit 1; fi
                 - sudo mv prometheus-*.linux-amd64 prometheus-files
                 - sudo rm prometheus-*.tar.gz
                 - echo 'Configuring Prometheus'
-                - sudo useradd --no-create-home --shell /bin/fase prometheus | >/dev/null 2>&1
                 - sudo mkdir -p /etc/prometheus
-                - sudo chown prometheus:prometheus /etc/prometheus
                 - sudo cp prometheus-files/prometheus /usr/local/bin/
                 - sudo cp prometheus-files/promtool /usr/local/bin/
-                - sudo chown prometheus:prometheus /usr/local/bin/prometheus
-                - sudo chown prometheus:prometheus /usr/local/bin/promtool
                 - sudo cp -r prometheus-files/consoles /etc/prometheus/
                 - sudo cp -r prometheus-files/console_libraries/ /etc/prometheus/
-                - sudo chown -R prometheus:prometheus /etc/prometheus/consoles/
-                - sudo chown -R prometheus:prometheus /etc/prometheus/console_libraries/
-                - sudo echo "{{ ScrapeConfig }}" > /etc/prometheus/prometheus.yml
-                - sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
-                - sudo echo "{{  ServiceConfig }}" > /etc/systemd/system/prometheus.service
-                - echo 'Starting Prometheus service'
-                - sudo systemctl daemon-reload
-                - sudo systemctl enable prometheus >/dev/null 2>&1
-                - sudo systemctl start prometheus
                 - sudo rm -rf prometheus-files/
                 - echo 'Downloading and configururing Node Exporter'
-                - sudo systemctl stop node_exporter >/dev/null 2>&1
                 - sudo wget {{ NodeExporterPackageUrl }} >/dev/null 2>&1
                 - sudo tar xfz node_exporter-*.tar.gz
                 - sudo mv node_exporter-*.linux-amd64 node_exporter
                 - sudo rm -rf /etc/prometheus/node_exporter
                 - sudo mv node_exporter/ /etc/prometheus/node_exporter/
                 - sudo rm node_exporter-*.tar.gz
-                - sudo chown -R prometheus:prometheus /etc/prometheus/node_exporter
-                - sudo echo "{{ NodeExporterServiceConfig }}" > /etc/systemd/system/node_exporter.service
-                - sudo systemctl daemon-reload
-                - sudo systemctl enable node_exporter >/dev/null 2>&1
-                - sudo systemctl start node_exporter
       DocumentFormat: YAML
       DocumentType: Command
-      Name: !Sub "${AWS::StackName}-prometheus-installer"
+      Name: !Sub "${AWS::StackName}"
       Tags:
         - Key: Name
           Value: !Ref "AWS::StackName"
 Outputs:
-  AutoscalingGroupName:
-    Description: The name of the AutoScaling Group that will trigger a Prometheus auto-install event
-    # Value: !Sub 'AutoScale-${AWS::StackName}'
-    Value: sudo echo "{{ ScrapeConfig }}" > /etc/prometheus/prometheus.yml
+  PrometheusScrapeConfig:
+    Description: PrometheusScrapeConfig
+    Value: !Sub '{{ssm:${PrometheusScrapeConfig}}}'
+  PrometheusServiceConfig:
+    Description: PrometheusServiceConfig
+    Value:  !Sub '{{ssm:${PrometheusServiceConfig}}}'
+  NodeExporterServiceConfig:
+    Description: NodeExporterServiceConfig
+    Value:  !Sub '{{ssm:${NodeExporterServiceConfig}}}'
    
