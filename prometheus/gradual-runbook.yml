@@ -104,15 +104,15 @@ Resources:
           ScrapeConfig:
             type: String
             description: The Prometheus scrape configuration
-            default: !Sub "{{ ssm:${PrometheusScrapeConfig} }}"
+            default: !Sub "resolve:ssm:${PrometheusScrapeConfig}"
           ServiceConfig:
             type: String
             description: The Prometheus service configuration
-            default: !Sub "{{ ssm:${PrometheusServiceConfig} }}"
+            default: !Sub "resolve:ssm:${PrometheusServiceConfig}"
           NodeExporterServiceConfig:
             type: String
             description: The Node Exporter service configuration
-            default: !Sub "{{ ssm:${NodeExporterServiceConfig} }}"
+            default: !Sub "resolve:ssm:${NodeExporterServiceConfig}"
         mainSteps:
           - action: "aws:runShellScript"
             name: "InstallPrometheus"
@@ -129,9 +129,7 @@ Resources:
                 - echo 'Configuring Prometheus'
                 - sudo useradd --no-create-home --shell /bin/fase prometheus | >/dev/null 2>&1
                 - sudo mkdir -p /etc/prometheus
-                - sudo mkdir -p /var/lib/prometheus
                 - sudo chown prometheus:prometheus /etc/prometheus
-                - sudo chown prometheus:prometheus /var/lib/prometheus
                 - sudo cp prometheus-files/prometheus /usr/local/bin/
                 - sudo cp prometheus-files/promtool /usr/local/bin/
                 - sudo chown prometheus:prometheus /usr/local/bin/prometheus
