@@ -17,7 +17,7 @@ Resources:
             inputs:
               timeoutSeconds: "60"
               runCommand:
-                - sudo echo {{ssm:grad-prom-ServiceConfig}} > /etc/systemd/system/prometheus.service
+                - sudo echo '{{resolve:ssm:grad-prom-ServiceConfig}}' > /etc/systemd/system/prometheus.service
       DocumentFormat: YAML
       DocumentType: Command
-      Name: "CFN_2.2_command_example"
+      Name: !Sub "${AWS::StackName}"

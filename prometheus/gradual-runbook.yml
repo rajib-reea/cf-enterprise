@@ -104,15 +104,15 @@ Resources:
           ScrapeConfig:
             type: String
             description: The Prometheus scrape configuration
-            default: !Sub "resolve:ssm:${PrometheusScrapeConfig}"
+            default: !Sub '{{ssm:${PrometheusScrapeConfig}}}'
           ServiceConfig:
             type: String
             description: The Prometheus service configuration
-            default: !Sub "resolve:ssm:${PrometheusServiceConfig}"
+            default: !Sub '{{ssm:${PrometheusServiceConfig}}}'
           NodeExporterServiceConfig:
             type: String
             description: The Node Exporter service configuration
-            default: !Sub "resolve:ssm:${NodeExporterServiceConfig}"
+            default:  !Sub '{{ssm:${NodeExporterServiceConfig}}}'
         mainSteps:
           - action: "aws:runShellScript"
             name: "InstallPrometheus"
@@ -140,7 +140,7 @@ Resources:
                 - sudo chown -R prometheus:prometheus /etc/prometheus/console_libraries/
                 - sudo echo "{{ ScrapeConfig }}" > /etc/prometheus/prometheus.yml
                 - sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
-                - sudo echo "{{ ServiceConfig }}" > /etc/systemd/system/prometheus.service
+                - sudo echo "{{  ServiceConfig }}" > /etc/systemd/system/prometheus.service
                 - echo 'Starting Prometheus service'
                 - sudo systemctl daemon-reload
                 - sudo systemctl enable prometheus >/dev/null 2>&1
@@ -167,6 +167,7 @@ Resources:
           Value: !Ref "AWS::StackName"
 Outputs:
   AutoscalingGroupName:
-    Description: The name of the AutoScaling Group that will trigger a Prometheus
-      auto-install event
-    Value: !Sub 'AutoScale-${AWS::StackName}'
+    Description: The name of the AutoScaling Group that will trigger a Prometheus auto-install event
+    # Value: !Sub 'AutoScale-${AWS::StackName}'
+    Value: '{{ !GetAtt NodeExporterServiceConfig }}'
+   
