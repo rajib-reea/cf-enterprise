@@ -169,5 +169,5 @@ Outputs:
   AutoscalingGroupName:
     Description: The name of the AutoScaling Group that will trigger a Prometheus auto-install event
     # Value: !Sub 'AutoScale-${AWS::StackName}'
-    Value: '{{ !GetAtt NodeExporterServiceConfig }}'
+    Value: sudo echo "{{ ScrapeConfig }}" > /etc/prometheus/prometheus.yml
    
