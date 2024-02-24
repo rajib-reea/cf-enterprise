@@ -1,0 +1,23 @@
+---
+Resources:
+  MyDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Content:
+        schemaVersion: "2.2"
+        description: "Run a script on Linux instances."
+        parameters:
+          commands:
+            type: String
+            description: "(Required) The commands to run or the path to an existing script on the instance."
+            default: "echo Hello World"
+        mainSteps:
+          - action: aws:runShellScript
+            name: runCommands
+            inputs:
+              timeoutSeconds: "60"
+              runCommand:
+                - "{{ commands }}"
+      DocumentFormat: YAML
+      DocumentType: Command
+      Name: "CFN_2.2_command_example"
