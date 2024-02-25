@@ -7,10 +7,10 @@ Parameters:
     Type: String
     Description: The URL of the linux installer for Prometheus
     Default: https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.linux-amd64.tar.gz
-  NodeExporterInstallUrl:
-    Type: String
-    Description: The URL of the linux Node Exporter for Prometheus
-    Default: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+  # NodeExporterInstallUrl:
+  #   Type: String
+  #   Description: The URL of the linux Node Exporter for Prometheus
+  #   Default: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
   AMPWorkspaceId:
     Type: String
     Description: The AMP workspace ID where we want to remote write Prometheus data
