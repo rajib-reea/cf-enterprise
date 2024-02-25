@@ -1,0 +1,158 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  its for ssm automation for prometheus intsallation
+Parameters:
+  PrometheusInstallUrl:
+    Type: String
+    Description: The URL of the linux installer for Prometheus
+    Default: https://github.com/prometheus/prometheus/releases/download/v2.26.0/prometheus-2.26.0.linux-amd64.tar.gz
+  NodeExporterInstallUrl:
+    Type: String
+    Description: The URL of the linux Node Exporter for Prometheus
+    Default: https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+  AMPWorkspaceId:
+    Type: String
+    Description: The AMP workspace ID where we want to remote write Prometheus data
+    Default:  ws-ae461c26-fbfa-42bf-b6a1-13c63c0d5ecc
+    MinLength: 10
+    AllowedPattern: ^[a-zA-Z0-9-]+$
+Resources:
+  PrometheusScrapeConfig:
+    Type: AWS::SSM::Parameter
+    Properties:
+      # Name: !Sub "${AWS::StackName}-ScrapeConfig"
+      Name: "ScrapeConfig"
+      Type: String
+      Value: !Sub |
+        scrape_configs:
+          - job_name: 'node'
+            static_configs:
+              - targets: ['localhost:9100']
+
+        remote_write:
+          - 
+            url: https://aps-workspaces.${AWS::Region}.amazonaws.com/workspaces/${AMPWorkspaceId}/api/v1/remote_write
+            queue_config:
+                max_samples_per_send: 1000
+                max_shards: 200
+                capacity: 2500
+            sigv4:
+                region: ${AWS::Region}
+      Tags:
+        Name: !Ref "AWS::StackName"
+  PrometheusServiceConfig:
+    Type: AWS::SSM::Parameter
+    Properties:
+      # Name: !Sub "${AWS::StackName}-ServiceConfig"
+      Name: "ServiceConfig"
+      Type: String
+      Value: |
+        [Unit]
+        Description=Prometheus
+        Wants=network-online.target
+        After=network-online.target
+
+        [Service]
+        User=prometheus
+        Group=prometheus
+        Type=simple
+        ExecStart=/usr/local/bin/prometheus \
+           --config.file /etc/prometheus/prometheus.yml \
+            --storage.tsdb.path /var/lib/prometheus/ \
+            --web.console.templates=/etc/prometheus/consoles \
+            --web.console.libraries=/etc/prometheus/console_libraries
+
+        [Install]
+        WantedBy=multi-user.target
+      Tags:
+        Name: !Ref "AWS::StackName"
+  PrometheusNodeExporterServiceConfig:
+    Type: AWS::SSM::Parameter
+    Properties:
+      # Name: !Sub "${AWS::StackName}-NodeExporter-ServiceConfig"
+      Name:  "NodeExporterServiceConfig"
+      Type: String
+      Value: |
+        [Unit]
+        Description=Node Exporter
+        Wants=network-online.target
+        After=network-online.target
+
+        [Service]
+        User=prometheus
+        Group=prometheus
+        Type=simple
+        ExecStart=/etc/prometheus/node_exporter/node_exporter
+
+        [Install]
+        WantedBy=multi-user.target
+      Tags:
+        Name: !Ref "AWS::StackName"
+  PrometheusAutomationDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Content:
+        schemaVersion: "2.2"
+        description: Installs and configures Prometheus on Linux instances
+        parameters:
+          PackageUrl:
+            type: String
+            description: Prometheus package URL
+            default: !Ref "PrometheusInstallUrl"
+          NodeExporterPackageUrl:
+            type: String
+            description: Node Exporter package URL
+            default: !Ref "NodeExporterInstallUrl"
+          ScrapeConfig:
+            type: String
+            description: The Prometheus scrape configuration
+            default: !Sub '{{ssm:${PrometheusScrapeConfig}}}'
+          ServiceConfig:
+            type: String
+            description: The Prometheus service configuration
+            default: !Sub '{{ssm:${PrometheusServiceConfig}}}'
+          NodeExporterServiceConfig:
+            type: String
+            description: The Node Exporter service configuration
+            default:  !Sub '{{ssm:${PrometheusNodeExporterServiceConfig}}}'
+        mainSteps:
+          - action: "aws:runShellScript"
+            name: "InstallPrometheus"
+            inputs:
+              timeoutSeconds: "60"
+              runCommand:
+                - sudo mkdir /var/lib/prometheus
+                - sudo chown prometheus /var/lib/prometheus/
+                - sudo wget https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.linux-amd64.tar.gz
+                - sudo tar -zxpvf /tmp/prometheus-2.49.1.linux-amd64.tar.gz -C /tmp
+                - sudo rm -rvf prometheus-2.49.1.linux-amd64.tar.gz
+                - sudo cp prometheus-2.49.1.linux-amd64/prometheus /usr/local/bin
+                - sudo cp prometheus-2.49.1.linux-amd64/promtool /usr/local/bin
+                - sudo mv prometheus-2.49.1.linux-amd64 /etc/prometheus
+      DocumentFormat: YAML
+      DocumentType: Command
+      Name: !Sub "${AWS::StackName}"
+      Tags:
+        - Key: Name
+          Value: !Ref "AWS::StackName"
+Outputs:
+  PrometheusScrapeConfig:
+    Description: PrometheusScrapeConfig
+    Value: !Sub '{{ssm:${PrometheusScrapeConfig}}}'
+  PrometheusServiceConfig:
+    Description: PrometheusServiceConfig
+    Value:  !Sub '{{ssm:${PrometheusServiceConfig}}}'
+  PrometheusNodeExporterServiceConfig:
+    Description: NodeExporterServiceConfig
+    Value:  !Sub '{{ssm:${PrometheusNodeExporterServiceConfig}}}'
+  # ScrapeConfig:
+  #   Description: ScrapeConfig
+  #   Value: sudo echo "{{ resolve:ssm:ScrapeConfig }}" > /etc/prometheus/prometheus.yml
+  # ServiceConfig:
+  #   Description: ServiceConfig
+  #   Value:   sudo echo "{{ resolve:ssm:ServiceConfig }}" > /etc/systemd/system/prometheus.service
+  # NodeExporterServiceConfig:
+  #   Description: NodeExporterServiceConfig
+  #   Value: sudo echo "{{ resolve:ssm:NodeExporterServiceConfig }}" > /etc/systemd/system/node_exporter.service
+   
