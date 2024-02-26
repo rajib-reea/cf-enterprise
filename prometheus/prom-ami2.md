@@ -50,4 +50,4 @@ Outputs:
     Value:  sudo echo "{{resolve:ssm:PrometheusScrapeConfig}}" > /etc/systemd/system/prometheus.service
   PrometheusServiceConfig:
     Value:  sudo echo "{{resolve:ssm:PrometheusServiceConfig}}" > /etc/prometheus/prometheus.yml
-    ```
+```
