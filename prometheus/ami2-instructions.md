@@ -18,21 +18,23 @@
 ```
 ```
 
-/etc/prometheus/prometheus.yml
+[[/etc/prometheus/prometheus.yml]]
+
 scrape_configs:
   - job_name: 'node'
     static_configs:
-     - targets: ['localhost:9100']
-remote_write:
-   - url: https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-ae461c26-fbfa-42bf-b6a1-13c63c0d5ecc/api/v1/remote_write
-      queue_config:
-        max_samples_per_send: 1000
-        max_shards: 200
-        capacity: 2500
-        sigv4:
-          region: us-east-1
+     -  targets: ['localhost:9100']
+        remote_write:
+          - url: https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-ae461c26-fbfa-42bf-b6a1-13c63c0d5ecc/api/v1/remote_write
+            queue_config:
+            max_samples_per_send: 1000
+            max_shards: 200
+            capacity: 2500
+            sigv4:
+              region: us-east-1
 
-/etc/systemd/system/prometheus.service
+[[/etc/systemd/system/prometheus.service]]
+
 [Unit]
 Description=Prometheus
 Wants=network-online.target
@@ -43,10 +45,10 @@ User=prometheus
 Group=prometheus
 Type=simple
 ExecStart=/usr/local/bin/prometheus \
-           --config.file /etc/prometheus/prometheus.yml \
-            --storage.tsdb.path /var/lib/prometheus/ \
-            --web.console.templates=/etc/prometheus/consoles \
-            --web.console.libraries=/etc/prometheus/console_libraries
+    --config.file /etc/prometheus/prometheus.yml \
+    --storage.tsdb.path /var/lib/prometheus/ \
+    --web.console.templates=/etc/prometheus/consoles \
+    --web.console.libraries=/etc/prometheus/console_libraries
 [Install]
 WantedBy=multi-user.target
 ```
