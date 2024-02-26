@@ -19,16 +19,15 @@ Resources:
         scrape_configs:
           - job_name: 'node'
             static_configs:
-              - targets: ['localhost:9100']
-
-        remote_write:
-          - url: https://aps-workspaces.${AWS::Region}.amazonaws.com/workspaces/${AMPWorkspaceId}/api/v1/remote_write
-            queue_config:
-                max_samples_per_send: 1000
-                max_shards: 200
-                capacity: 2500
-            sigv4:
-                region: ${AWS::Region}
+             -  targets: ['localhost:9100']
+                remote_write:
+                  - url: https://aps-workspaces.${AWS::Region}.amazonaws.com/workspaces/${AMPWorkspaceId}/api/v1/remote_write
+                    queue_config:
+                    max_samples_per_send: 1000
+                    max_shards: 200
+                    capacity: 2500
+                    sigv4:
+                      region: ${AWS::Region}
       Tags:
         Name: !Ref "AWS::StackName"
   PrometheusServiceConfig:
